@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  api:
+    image: "y4r4r3r0_api:0.1.0"
+    container_name: "y4r4r3r0_api"
+    depends_on:
+      - db
+    build:
+      context: ./docker/api
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8000"
+    volumes:
+      - ./app:/usr/src/app/app:cached
+      - ./db:/usr/src/app/db:cached
+      - ./scripts:/usr/src/app/scripts:cached
+    working_dir: /usr/src/app/scripts
+    command: bash -C "./run.sh"
+    networks:
+      - y4r4r3r0_network
+    environment:
+      APP_ENV: "development"
+      TZ: "Asia/Tokyo"
+    env_file:
+      - .env.development
+  db:
+    image: "y4r4r3r0_db:0.1.0"
+    container_name: "y4r4r3r0_db"
+    build:
+      context: ./docker/db
+      dockerfile: Dockerfile
+    restart: always
+    tty: true
+    expose:
+      - "3306"
+    volumes:
+      - ./docker/db/conf.d:/etc/mysql/conf.d:cached
+      - ./log/db:/var/log/mysql:cached
+    networks:
+      - y4r4r3r0_network
+    environment:
+      APP_ENV: "development"
+      TZ: "Asia/Tokyo"
+    env_file:
+      - .env.development
+
+networks:
+  default:
+    external: true
+    name: bridge
+  y4r4r3r0_network:
+    external: true
+    name: y4r4r3r0_network
+    driver: bridge
